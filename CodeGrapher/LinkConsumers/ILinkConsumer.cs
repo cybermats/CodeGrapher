@@ -1,4 +1,4 @@
-﻿namespace CodeGrapher;
+﻿namespace CodeGrapher.LinkConsumers;
 
 public interface ILinkConsumer
 {

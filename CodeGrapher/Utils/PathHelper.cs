@@ -1,4 +1,4 @@
-﻿namespace CodeGrapher;
+﻿namespace CodeGrapher.Utils;
 
 public static class PathHelper
 {
@@ -6,4 +6,5 @@ public static class PathHelper
     {
         return Directory.GetParent(filepath)?.FullName;
     }
+    
 }

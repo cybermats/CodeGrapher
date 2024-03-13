@@ -1,5 +1,5 @@
 ﻿using CodeGrapher;
 using Spectre.Console.Cli;
 
-var app = new CommandApp<ExtractCommand>();
+var app = new CommandApp<GraphManager>();
 return app.Run(args);
