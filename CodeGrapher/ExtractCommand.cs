@@ -1,8 +1,9 @@
-﻿using Spectre.Console.Cli;
+﻿using System.Threading.Channels;
+using Spectre.Console.Cli;
 
 namespace CodeGrapher;
 
-public class ExtractCommand : Command<ExtractCommand.Settings>
+public class ExtractCommand : AsyncCommand<ExtractCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
@@ -11,9 +12,16 @@ public class ExtractCommand : Command<ExtractCommand.Settings>
     }
 
 
-    public override int Execute(CommandContext context, Settings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
         Console.WriteLine($"File path: {settings.FilePath}");
+
+
+        var channel = Channel.CreateUnbounded<string>();
+        using var analyser = new Analyzer(channel, settings.FilePath);
+        await analyser.RunAsync();
+        await new LinkConsoleWriter(channel).RunAsync();
+        await channel.Reader.Completion;
         return 0;
     }
 }
