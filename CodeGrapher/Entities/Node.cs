@@ -47,16 +47,6 @@ public class SolutionNode : Node
         if (name is null)
             throw new ArgumentNullException(nameof(name));
     }
-
-    protected override StringBuilder FetchProperties(StringBuilder sb)
-    {
-        sb.Append("pk: ");
-        sb.Append(Pk);
-        sb.Append(", name: \"");
-        sb.Append(Name);
-        sb.Append("\"");
-        return sb;
-    }
 }
 
 public class ProjectNode : Node
@@ -67,16 +57,6 @@ public class ProjectNode : Node
 
     public ProjectNode(Project project) : base("Project", project.Name, project.Name)
     {
-    }
-
-    protected override StringBuilder FetchProperties(StringBuilder sb)
-    {
-        sb.Append("pk: ");
-        sb.Append(Pk);
-        sb.Append(", name: \"");
-        sb.Append(Name);
-        sb.Append("\"");
-        return sb;
     }
 }
 
