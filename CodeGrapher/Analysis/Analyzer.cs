@@ -10,22 +10,27 @@ namespace CodeGrapher.Analysis;
 
 public sealed class Analyzer : IDisposable
 {
-    private readonly MSBuildWorkspace _workspace = MSBuildWorkspace.Create();
-    private Solution? _solution;
-    private IEnumerable<Project> _projects = Array.Empty<Project>();
-    private readonly Dictionary<SyntaxTree, SemanticModel> _models = new();
-    private readonly Dictionary<ProjectId, string> _projectNameLookup = new();
-
     private readonly ChannelWriter<Relationship> _channelWriter;
     private readonly string? _filename;
+    private readonly Dictionary<SyntaxTree, SemanticModel> _models = new();
+    private readonly Dictionary<ProjectId, string> _projectNameLookup = new();
+    private readonly MSBuildWorkspace _workspace = MSBuildWorkspace.Create();
 
-    private int _numSyntaxTrees = 0;
+    private int _numSyntaxTrees;
+    private IEnumerable<Project> _projects = Array.Empty<Project>();
+    private Solution? _solution;
 
     public Analyzer(Channel<Relationship> channel, string? filename)
     {
         MSBuildLocator.RegisterDefaults();
         _channelWriter = channel.Writer;
         _filename = filename;
+    }
+
+
+    void IDisposable.Dispose()
+    {
+        _workspace.Dispose();
     }
 
     private async Task OpenAsync()
@@ -137,11 +142,5 @@ public sealed class Analyzer : IDisposable
         Console.WriteLine("Analyzing...");
         await Analyze();
         _channelWriter.Complete();
-    }
-
-
-    void IDisposable.Dispose()
-    {
-        _workspace.Dispose();
     }
 }

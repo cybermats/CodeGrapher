@@ -15,17 +15,10 @@ public class Neo4jProcessor : IProcessor, IDisposable, IAsyncDisposable
         _session = _driver.AsyncSession();
     }
 
-    public async Task InitializeAsync()
+    async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        Console.WriteLine("Deleting old nodes...");
-        await _session.RunAsync("MATCH (n) DETACH DELETE n;");
-        Console.WriteLine("Old nodes deleted.");
-    }
-
-
-    public async Task WriteAsync(Relationship relationship)
-    {
-        await _session.RunAsync(relationship.ToString());
+        await _session.DisposeAsync();
+        await _driver.DisposeAsync();
     }
 
     void IDisposable.Dispose()
@@ -34,9 +27,16 @@ public class Neo4jProcessor : IProcessor, IDisposable, IAsyncDisposable
         _driver.Dispose();
     }
 
-    async ValueTask IAsyncDisposable.DisposeAsync()
+
+    public async Task WriteAsync(Relationship relationship)
     {
-        await _session.DisposeAsync();
-        await _driver.DisposeAsync();
+        await _session.RunAsync(relationship.ToString());
+    }
+
+    public async Task InitializeAsync()
+    {
+        Console.WriteLine("Deleting old nodes...");
+        await _session.RunAsync("MATCH (n) DETACH DELETE n;");
+        Console.WriteLine("Old nodes deleted.");
     }
 }

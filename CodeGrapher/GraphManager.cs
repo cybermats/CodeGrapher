@@ -2,18 +2,17 @@
 using CodeGrapher.Analysis;
 using CodeGrapher.Entities;
 using CodeGrapher.Outputs;
-using Neo4j.Driver;
 
 namespace CodeGrapher;
 
 public class GraphManager
 {
     private readonly Channel<Relationship> _channel = Channel.CreateUnbounded<Relationship>();
+    private readonly bool _enableConsole;
     private readonly string _filepath;
+    private readonly string _password;
     private readonly string _uri;
     private readonly string _user;
-    private readonly string _password;
-    private readonly bool _enableConsole;
 
     public GraphManager(string? filepath, string? uri, string? user, string? password, bool enableConsole)
     {

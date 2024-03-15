@@ -5,6 +5,14 @@ namespace CodeGrapher;
 
 public class CommandLine : AsyncCommand<CommandLine.Settings>
 {
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
+    {
+        var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password,
+            settings.PrintToConsole);
+        await manager.RunAsync();
+        return 0;
+    }
+
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<filepath>")] public string? FilePath { get; init; }
@@ -25,14 +33,5 @@ public class CommandLine : AsyncCommand<CommandLine.Settings>
         [CommandOption("--to-console")]
         [DefaultValue(false)]
         public bool PrintToConsole { get; init; }
-    }
-
-
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
-    {
-        var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password,
-            settings.PrintToConsole);
-        await manager.RunAsync();
-        return 0;
     }
 }

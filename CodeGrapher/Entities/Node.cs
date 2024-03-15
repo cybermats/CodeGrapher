@@ -1,5 +1,4 @@
-﻿using System.Formats.Tar;
-using System.Text;
+﻿using System.Text;
 using CodeGrapher.Utils;
 using Microsoft.CodeAnalysis;
 
@@ -7,8 +6,8 @@ namespace CodeGrapher.Entities;
 
 public abstract class Node
 {
-    protected readonly string Label;
     protected readonly string FullName;
+    protected readonly string Label;
     protected string Name;
 
     protected Node(string? label, string? fullName, string? name)
@@ -140,8 +139,6 @@ public class MethodNode : SymbolNode
     private readonly string _arguments;
     private readonly string _returnType;
 
-    protected override int Pk => $"{FullName}{_arguments}{_returnType}".GetHashCode();
-
     public MethodNode(IMethodSymbol? methodSymbol) : base(methodSymbol?.Label(), methodSymbol)
     {
         if (methodSymbol is null)
@@ -151,6 +148,8 @@ public class MethodNode : SymbolNode
         _returnType = methodSymbol.ReturnType?.ToString() ??
                       throw new ArgumentNullException(nameof(methodSymbol), "methodSymbol.ReturnType returned null");
     }
+
+    protected override int Pk => $"{FullName}{_arguments}{_returnType}".GetHashCode();
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
     {
