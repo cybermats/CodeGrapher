@@ -20,6 +20,15 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
             return;
         }
 
+        if (classSymbol.BaseType is not null && classSymbol.BaseType.BaseType is not null)
+        {
+            var baseType = classSymbol.BaseType;
+            
+            var relation = new Relationship(new ClassNode(classSymbol), new ClassNode(baseType),
+                RelationshipType.Inherits);
+            Items.Add(relation);
+        }
+
         var classDeclaredIn =
             classSymbol.Locations
                 .Where(l => l.Kind == LocationKind.SourceFile)

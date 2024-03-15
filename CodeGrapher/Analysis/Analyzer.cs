@@ -4,6 +4,7 @@ using CodeGrapher.Utils;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
+using ShellProgressBar;
 
 namespace CodeGrapher.Analysis;
 
@@ -17,6 +18,8 @@ public sealed class Analyzer : IDisposable
 
     private readonly ChannelWriter<Relationship> _channelWriter;
     private readonly string? _filename;
+
+    private int _numSyntaxTrees = 0;
 
     public Analyzer(Channel<Relationship> channel, string? filename)
     {
@@ -62,6 +65,7 @@ public sealed class Analyzer : IDisposable
 
             foreach (var syntaxTree in compilation.SyntaxTrees)
             {
+                _numSyntaxTrees++;
                 _models[syntaxTree] = compilation.GetSemanticModel(syntaxTree);
             }
 
@@ -78,6 +82,9 @@ public sealed class Analyzer : IDisposable
         }
 
         var solutionDirectory = _solution?.FilePath?.ContainingDirectory() ?? null;
+
+        var options = new ProgressBarOptions();
+        using var progressBar = new ProgressBar(_numSyntaxTrees, "Starting...", options);
 
         foreach (var project in _projects)
         {
@@ -113,6 +120,7 @@ public sealed class Analyzer : IDisposable
             foreach (var tree in compilation.SyntaxTrees)
             {
                 typeWalker.Visit(await tree.GetRootAsync());
+                progressBar.Tick(tree.FilePath);
             }
 
             foreach (var item in typeWalker.Items)
@@ -124,8 +132,11 @@ public sealed class Analyzer : IDisposable
 
     public async Task RunAsync()
     {
+        Console.WriteLine("Opening workspace...");
         await OpenAsync();
+        Console.WriteLine("Preparing workspace...");
         await PrepareAsync();
+        Console.WriteLine("Analyzing...");
         await Analyze();
         _channelWriter.Complete();
     }

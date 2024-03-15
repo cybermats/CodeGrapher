@@ -10,6 +10,7 @@ public enum RelationshipType
     ImplementedAs,
     Invoke,
     Construct,
+    Inherits
 }
 
 public static class RelationshipTypeExtensions
@@ -26,6 +27,7 @@ public static class RelationshipTypeExtensions
             RelationshipType.ImplementedAs => "IMPLEMENTED_AS",
             RelationshipType.Invoke => "INVOKE",
             RelationshipType.Construct => "CONSTRUCT",
+            RelationshipType.Inherits => "INHERITS",
             _ => throw new ArgumentOutOfRangeException(nameof(relationship), relationship, null)
         };
     }
