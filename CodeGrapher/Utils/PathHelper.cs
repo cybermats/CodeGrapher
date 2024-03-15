@@ -6,5 +6,4 @@ public static class PathHelper
     {
         return Directory.GetParent(filepath)?.FullName;
     }
-    
 }

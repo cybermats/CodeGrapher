@@ -31,6 +31,7 @@ public abstract class Node
         sb.Append("\"");
         return sb;
     }
+
     public string ToString(string variable = "")
     {
         return $"({variable}:{Label} {{ {FetchProperties(new StringBuilder())} }})";
@@ -42,10 +43,8 @@ public abstract class Node
     }
 }
 
-
 public class FileNode(string fullName) : Node("File", fullName, Path.GetFileName(fullName))
 {
-    
 }
 
 public class SolutionNode : Node
@@ -54,7 +53,6 @@ public class SolutionNode : Node
     {
         if (name is null)
             throw new ArgumentNullException(nameof(name));
-        
     }
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
@@ -76,7 +74,6 @@ public class ProjectNode : Node
 
     public ProjectNode(Project project) : base("Project", project.Name, project.Name)
     {
-        
     }
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
@@ -88,8 +85,6 @@ public class ProjectNode : Node
         sb.Append("\"");
         return sb;
     }
-
-    
 }
 
 public class SymbolNode : Node
@@ -103,17 +98,15 @@ public class SymbolNode : Node
             throw new ArgumentNullException(nameof(symbol));
 
         if (symbol is IMethodSymbol methodSymbol)
-        {
             if (methodSymbol.MethodKind == MethodKind.Constructor)
                 Name = symbol.ContainingType.Name;
-        }
-        
+
         var attributes = symbol.GetAttributes();
         _attributes = string.Join(",", attributes.Select(a => $"\"{a.AttributeClass.Name}\"")
             .Select(a => a.Replace("Attribute", "")));
         _namespace = symbol.ContainingNamespace.Name;
     }
-    
+
     protected override StringBuilder FetchProperties(StringBuilder sb)
     {
         base.FetchProperties(sb);
@@ -124,7 +117,6 @@ public class SymbolNode : Node
         sb.Append("\"");
         return sb;
     }
-    
 }
 
 public class ClassNode : SymbolNode
@@ -133,13 +125,14 @@ public class ClassNode : SymbolNode
     {
         if (classSymbol is null)
             throw new ArgumentNullException(nameof(classSymbol));
-   }
+    }
 }
 
 public class InterfaceNode : SymbolNode
 {
     public InterfaceNode(INamedTypeSymbol symbol) : base("Interface", symbol)
-    { }
+    {
+    }
 }
 
 public class MethodNode : SymbolNode
@@ -153,10 +146,10 @@ public class MethodNode : SymbolNode
     {
         if (methodSymbol is null)
             throw new ArgumentNullException(nameof(methodSymbol));
-        
-        _arguments = string.Join(",", methodSymbol.Parameters.Select(p => $"\"{p.Type} {p.Name}\""));
-        _returnType = methodSymbol.ReturnType?.ToString() ?? throw new ArgumentNullException(nameof(methodSymbol), "methodSymbol.ReturnType returned null");
 
+        _arguments = string.Join(",", methodSymbol.Parameters.Select(p => $"\"{p.Type} {p.Name}\""));
+        _returnType = methodSymbol.ReturnType?.ToString() ??
+                      throw new ArgumentNullException(nameof(methodSymbol), "methodSymbol.ReturnType returned null");
     }
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
@@ -169,7 +162,4 @@ public class MethodNode : SymbolNode
         sb.Append("]");
         return sb;
     }
-
-
-    
 }

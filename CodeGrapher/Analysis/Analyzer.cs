@@ -77,9 +77,7 @@ public sealed class Analyzer : IDisposable
     {
         SolutionNode? solutionNode = null;
         if (_solution is not null && _solution.FilePath != null)
-        {
             solutionNode = new SolutionNode(Path.GetFileNameWithoutExtension(_solution.FilePath));
-        }
 
         var solutionDirectory = _solution?.FilePath?.ContainingDirectory() ?? null;
 
@@ -89,29 +87,31 @@ public sealed class Analyzer : IDisposable
         foreach (var project in _projects)
         {
             var projectNode = new ProjectNode(project);
-            if (solutionNode is not null) 
+            if (solutionNode is not null)
                 await _channelWriter.WriteAsync(new Relationship(solutionNode, projectNode,
-                RelationshipType.Have));
-            
+                    RelationshipType.Have));
+
             var projectDirectory = project.FilePath?.ContainingDirectory() ?? "";
 
             foreach (var projectReference in project.ProjectReferences)
             {
                 var referencedProjectName = _projectNameLookup[projectReference.ProjectId];
                 var refProjectNode = new ProjectNode(referencedProjectName);
-                await _channelWriter.WriteAsync(new Relationship(projectNode, refProjectNode, RelationshipType.DependsOn));
+                await _channelWriter.WriteAsync(new Relationship(projectNode, refProjectNode,
+                    RelationshipType.DependsOn));
             }
 
             foreach (var document in project.Documents)
             {
                 if (document.Folders.FirstOrDefault() == "obj")
                     continue;
-                
-                var filepath = Path.GetRelativePath( solutionDirectory ?? projectDirectory, document.FilePath ?? "");
+
+                var filepath = Path.GetRelativePath(solutionDirectory ?? projectDirectory, document.FilePath ?? "");
                 var fileNode = new FileNode(filepath);
                 if (string.IsNullOrWhiteSpace(filepath)) continue;
                 await _channelWriter.WriteAsync(new Relationship(projectNode, fileNode, RelationshipType.Contains));
             }
+
             var compilation = await project.GetCompilationAsync();
             if (compilation is null)
                 continue;
@@ -125,9 +125,7 @@ public sealed class Analyzer : IDisposable
 
             foreach (var item in typeWalker.Items)
                 await _channelWriter.WriteAsync(item);
-
         }
-
     }
 
     public async Task RunAsync()
@@ -140,7 +138,7 @@ public sealed class Analyzer : IDisposable
         await Analyze();
         _channelWriter.Complete();
     }
-    
+
 
     void IDisposable.Dispose()
     {

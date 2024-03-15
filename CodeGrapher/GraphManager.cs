@@ -8,8 +8,6 @@ namespace CodeGrapher;
 
 public class GraphManager
 {
-    
-    
     private readonly Channel<Relationship> _channel = Channel.CreateUnbounded<Relationship>();
     private readonly string _filepath;
     private readonly string _uri;
@@ -37,13 +35,9 @@ public class GraphManager
 
         IProcessor[] processors = null;
         if (_enableConsole)
-        {
             processors = [new ConsoleProcessor(), neo4JProcessor];
-        }
         else
-        {
             processors = [neo4JProcessor];
-        }
 
         try
         {
@@ -55,9 +49,7 @@ public class GraphManager
         {
             Console.Error.WriteLine(e);
         }
-        Console.WriteLine("Done");
-       
-        
 
+        Console.WriteLine("Done");
     }
 }

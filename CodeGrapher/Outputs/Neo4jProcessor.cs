@@ -7,8 +7,8 @@ public class Neo4jProcessor : IProcessor, IDisposable, IAsyncDisposable
 {
     private readonly IDriver _driver;
     private readonly IAsyncSession _session;
-    
-    
+
+
     public Neo4jProcessor(string uri, string user, string password)
     {
         _driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));

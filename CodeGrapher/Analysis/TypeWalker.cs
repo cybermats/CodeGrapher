@@ -23,7 +23,7 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
         if (classSymbol.BaseType is not null && classSymbol.BaseType.BaseType is not null)
         {
             var baseType = classSymbol.BaseType;
-            
+
             var relation = new Relationship(new ClassNode(classSymbol), new ClassNode(baseType),
                 RelationshipType.Inherits);
             Items.Add(relation);
@@ -33,7 +33,8 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
             classSymbol.Locations
                 .Where(l => l.Kind == LocationKind.SourceFile)
                 .Select(l => Path.GetRelativePath(projectRootPath, l.SourceTree?.FilePath ?? ""))
-                .Select(filepath => new Relationship(new ClassNode(classSymbol), new FileNode(filepath),   RelationshipType.DeclaredIn));
+                .Select(filepath => new Relationship(new ClassNode(classSymbol), new FileNode(filepath),
+                    RelationshipType.DeclaredIn));
 
         Items.AddRange(classDeclaredIn);
 
@@ -57,7 +58,8 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
 
         var classOfType =
             classSymbol.AllInterfaces
-                .Select(interfaceType => new Relationship(new InterfaceNode(interfaceType), new ClassNode(classSymbol), RelationshipType.OfType));
+                .Select(interfaceType => new Relationship(new InterfaceNode(interfaceType), new ClassNode(classSymbol),
+                    RelationshipType.OfType));
 
         Items.AddRange(classOfType);
 
@@ -75,7 +77,7 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
                             })
                         .Where(o => o.ImplementedMethod != null))
                 .Select(o => new Relationship(new MethodNode(o.InterfaceMember), new MethodNode(o.ImplementedMethod),
-                   RelationshipType.ImplementedAs));
+                    RelationshipType.ImplementedAs));
 
         Items.AddRange(membersImplementedBy);
         base.VisitClassDeclaration(node);
@@ -94,10 +96,12 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
             var members = interfaceSymbol.GetMembers().OfType<IMethodSymbol>();
 
             var relationships = members
-                .Select(member => new Relationship(new InterfaceNode(interfaceSymbol), new MethodNode(member), RelationshipType.Have));
+                .Select(member => new Relationship(new InterfaceNode(interfaceSymbol), new MethodNode(member),
+                    RelationshipType.Have));
 
             Items.AddRange(relationships);
         }
+
         base.VisitInterfaceDeclaration(node);
     }
 
@@ -115,14 +119,15 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
             node.DescendantNodes().OfType<InvocationExpressionSyntax>()
                 .Select(expr => model.GetSymbolInfo(expr))
                 .Where(si => si.Symbol is not null)
-                .SelectMany(si => (si.Symbol?.DeclaringSyntaxReferences ?? throw new InvalidOperationException("No symbol found"))
+                .SelectMany(si =>
+                    (si.Symbol?.DeclaringSyntaxReferences ?? throw new InvalidOperationException("No symbol found"))
                     .Select(declSynt => declSynt.GetSyntax() as MethodDeclarationSyntax)
                     .Where(ms => ms is not null)
                 )
                 .Select(ms => models[ms!.SyntaxTree].GetDeclaredSymbol(ms))
                 .Select(ms =>
                     new Relationship(new MethodNode(methodDeclaration), new MethodNode(ms), RelationshipType.Invoke));
-            
+
         Items.AddRange(methodInvokes);
 
 
@@ -144,26 +149,24 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
                 {
                     var symbol = models[syntax.SyntaxTree].GetDeclaredSymbol(syntax);
                     if (syntax is ConstructorDeclarationSyntax)
-                    {
                         return new[]
                         {
-                            new Relationship(new MethodNode(methodDeclaration), new MethodNode(symbol as IMethodSymbol), RelationshipType.Invoke),
+                            new Relationship(new MethodNode(methodDeclaration), new MethodNode(symbol as IMethodSymbol),
+                                RelationshipType.Invoke),
                             new Relationship(new MethodNode(methodDeclaration), new ClassNode(symbol?.ContainingType),
-                              RelationshipType.Construct)
+                                RelationshipType.Construct)
                         };
-                    }
 
                     if (syntax is ClassDeclarationSyntax)
-                    {
-                        return new []
+                        return new[]
                         {
-                            new Relationship(new MethodNode(methodDeclaration), new ClassNode(symbol as INamedTypeSymbol), RelationshipType.Construct)
+                            new Relationship(new MethodNode(methodDeclaration),
+                                new ClassNode(symbol as INamedTypeSymbol), RelationshipType.Construct)
                         };
-                    }
 
                     return Array.Empty<Relationship>();
                 });
-        
+
         Items.AddRange(methodConstructs);
 
         base.VisitMethodDeclaration(node);

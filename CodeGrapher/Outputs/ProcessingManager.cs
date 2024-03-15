@@ -6,7 +6,7 @@ namespace CodeGrapher.Outputs;
 public class ProcessingManager(Channel<Relationship> channel)
 {
     public IEnumerable<IProcessor> Processors { get; init; } = new List<IProcessor>();
-    
+
     public async Task ProcessAsync()
     {
         while (await channel.Reader.WaitToReadAsync())
@@ -15,6 +15,5 @@ public class ProcessingManager(Channel<Relationship> channel)
             foreach (var processor in Processors)
                 await processor.WriteAsync(message);
         }
-
     }
 }
