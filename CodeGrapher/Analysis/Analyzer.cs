@@ -20,6 +20,8 @@ public sealed class Analyzer : IDisposable
     private IEnumerable<Project> _projects = Array.Empty<Project>();
     private Solution? _solution;
 
+    public int TotalItems { get; private set; }
+
     public Analyzer(Channel<Relationship> channel, string? filename)
     {
         MSBuildLocator.RegisterDefaults();
@@ -78,6 +80,12 @@ public sealed class Analyzer : IDisposable
         }
     }
 
+    private async Task WriteAsync(Relationship relationship)
+    {
+        await _channelWriter.WriteAsync(relationship);
+        TotalItems++;
+    }
+
     private async Task Analyze()
     {
         SolutionNode? solutionNode = null;
@@ -93,7 +101,7 @@ public sealed class Analyzer : IDisposable
         {
             var projectNode = new ProjectNode(project);
             if (solutionNode is not null)
-                await _channelWriter.WriteAsync(new Relationship(solutionNode, projectNode,
+                await WriteAsync(new Relationship(solutionNode, projectNode,
                     RelationshipType.Have));
 
             var projectDirectory = project.FilePath?.ContainingDirectory() ?? "";
@@ -102,7 +110,7 @@ public sealed class Analyzer : IDisposable
             {
                 var referencedProjectName = _projectNameLookup[projectReference.ProjectId];
                 var refProjectNode = new ProjectNode(referencedProjectName);
-                await _channelWriter.WriteAsync(new Relationship(projectNode, refProjectNode,
+                await WriteAsync(new Relationship(projectNode, refProjectNode,
                     RelationshipType.DependsOn));
             }
 
@@ -114,7 +122,7 @@ public sealed class Analyzer : IDisposable
                 var filepath = Path.GetRelativePath(solutionDirectory ?? projectDirectory, document.FilePath ?? "");
                 var fileNode = new FileNode(filepath);
                 if (string.IsNullOrWhiteSpace(filepath)) continue;
-                await _channelWriter.WriteAsync(new Relationship(projectNode, fileNode, RelationshipType.Contains));
+                await WriteAsync(new Relationship(projectNode, fileNode, RelationshipType.Contains));
             }
 
             var compilation = await project.GetCompilationAsync();
@@ -129,7 +137,7 @@ public sealed class Analyzer : IDisposable
             }
 
             foreach (var item in typeWalker.Items)
-                await _channelWriter.WriteAsync(item);
+                await WriteAsync(item);
         }
     }
 

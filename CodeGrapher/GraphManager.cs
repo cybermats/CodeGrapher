@@ -40,9 +40,13 @@ public class GraphManager
 
         try
         {
-            var mgr = new ProcessingManager(_channel) { Processors = processors };
+            var mgr = new ProcessingManager(_channel) { Processors = processors, TotalItems = analyser.TotalItems};
             var process = mgr.ProcessAsync();
-            await Task.WhenAll(analysis, process, _channel.Reader.Completion);
+
+            await analysis;
+            mgr.TotalItems = analyser.TotalItems;
+            
+            await Task.WhenAll(process, _channel.Reader.Completion);
         }
         catch (Exception e)
         {
