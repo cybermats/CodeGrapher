@@ -98,6 +98,17 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
                     RelationshipType.Have));
 
             Items.AddRange(relationships);
+            
+            
+            var interfaceDeclaredIn =
+                interfaceSymbol.Locations
+                    .Where(l => l.Kind == LocationKind.SourceFile)
+                    .Select(l => Path.GetRelativePath(projectRootPath, l.SourceTree?.FilePath ?? ""))
+                    .Select(filepath => new Relationship(new InterfaceNode(interfaceSymbol), new FileNode(filepath),
+                        RelationshipType.DeclaredIn));
+
+            Items.AddRange(interfaceDeclaredIn);
+            
         }
 
         base.VisitInterfaceDeclaration(node);
