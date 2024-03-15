@@ -4,18 +4,11 @@ using Microsoft.CodeAnalysis;
 
 namespace CodeGrapher.Entities;
 
-public abstract class Node
+public abstract class Node(string? label, string? fullName, string? name)
 {
-    protected readonly string FullName;
-    protected readonly string Label;
-    protected string Name;
-
-    protected Node(string? label, string? fullName, string? name)
-    {
-        Label = label ?? throw new ArgumentNullException(nameof(label));
-        FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-    }
+    protected readonly string FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
+    protected readonly string Label = label ?? throw new ArgumentNullException(nameof(label));
+    protected string Name = name ?? throw new ArgumentNullException(nameof(name));
 
     protected virtual int Pk => FullName.GetHashCode();
 
@@ -31,8 +24,9 @@ public abstract class Node
         return sb;
     }
 
-    public string ToString(string variable = "")
+    public string ToString(string variable)
     {
+        if (variable == null) throw new ArgumentNullException(nameof(variable));
         return $"({variable}:{Label} {{ {FetchProperties(new StringBuilder())} }})";
     }
 
@@ -91,7 +85,7 @@ public class SymbolNode : Node
     private readonly string _attributes;
     private readonly string _namespace;
 
-    public SymbolNode(string? label, ISymbol? symbol) : base(label, symbol?.ToString(), symbol?.Name)
+    protected SymbolNode(string? label, ISymbol? symbol) : base(label, symbol?.ToString(), symbol?.Name)
     {
         if (label is null)
             throw new ArgumentNullException(nameof(label));
@@ -130,12 +124,7 @@ public class ClassNode : SymbolNode
     }
 }
 
-public class InterfaceNode : SymbolNode
-{
-    public InterfaceNode(INamedTypeSymbol symbol) : base("Interface", symbol)
-    {
-    }
-}
+public class InterfaceNode(INamedTypeSymbol symbol) : SymbolNode("Interface", symbol);
 
 public class MethodNode : SymbolNode
 {

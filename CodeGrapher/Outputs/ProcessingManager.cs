@@ -11,7 +11,7 @@ public class ProcessingManager(Channel<Relationship> channel)
 
     public async Task ProcessAsync()
     {
-        using var progressBar = new ProgressBar(0, "");
+        using var progressBar = new ProgressBar(1, "Write to database...");
         while (await channel.Reader.WaitToReadAsync())
         {
             var message = await channel.Reader.ReadAsync();
