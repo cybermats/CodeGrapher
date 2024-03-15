@@ -56,7 +56,7 @@ public class TypeWalker(Dictionary<SyntaxTree, SemanticModel> models, string pro
 
         var classOfType =
             classSymbol.AllInterfaces
-                .Select(interfaceType => new Relationship(new InterfaceNode(interfaceType), new ClassNode(classSymbol),
+                .Select(interfaceType => new Relationship(new ClassNode(classSymbol),new InterfaceNode(interfaceType), 
                     RelationshipType.OfType));
 
         Items.AddRange(classOfType);
