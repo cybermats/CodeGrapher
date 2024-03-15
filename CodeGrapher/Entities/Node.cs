@@ -10,13 +10,9 @@ public abstract class Node(string? label, string? fullName, string? name)
     protected readonly string Label = label ?? throw new ArgumentNullException(nameof(label));
     protected string Name = name ?? throw new ArgumentNullException(nameof(name));
 
-    protected virtual int Pk => FullName.GetHashCode();
-
     protected virtual StringBuilder FetchProperties(StringBuilder sb)
     {
-        sb.Append("pk: ");
-        sb.Append(Pk);
-        sb.Append(", fullname: \"");
+        sb.Append("fullname: \"");
         sb.Append(FullName);
         sb.Append("\", name: \"");
         sb.Append(Name);
@@ -120,8 +116,6 @@ public class MethodNode : SymbolNode
         _returnType = methodSymbol.ReturnType?.ToString() ??
                       throw new ArgumentNullException(nameof(methodSymbol), "methodSymbol.ReturnType returned null");
     }
-
-    protected override int Pk => $"{FullName}{_arguments}{_returnType}".GetHashCode();
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
     {
