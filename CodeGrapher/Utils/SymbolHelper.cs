@@ -9,6 +9,8 @@ public static class SymbolHelper
         return methodSymbol.MethodKind switch
         {
             MethodKind.Ordinary => "Method",
+            MethodKind.PropertyGet => "Property",
+            MethodKind.PropertySet => "Property",
             _ => methodSymbol.MethodKind.ToString()
         };
     }

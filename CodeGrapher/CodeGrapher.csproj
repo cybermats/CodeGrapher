@@ -13,6 +13,7 @@
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.2" />
       <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.9.2" />
+      <PackageReference Include="Neo4j.Driver" Version="5.18.0" />
       <PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
     </ItemGroup>
 

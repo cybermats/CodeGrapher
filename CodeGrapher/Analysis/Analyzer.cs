@@ -71,30 +71,45 @@ public sealed class Analyzer : IDisposable
 
     private async Task Analyze()
     {
+        SolutionNode? solutionNode = null;
+        if (_solution is not null && _solution.FilePath != null)
+        {
+            solutionNode = new SolutionNode(Path.GetFileNameWithoutExtension(_solution.FilePath));
+        }
+
+        var solutionDirectory = _solution?.FilePath?.ContainingDirectory() ?? null;
+
         foreach (var project in _projects)
         {
+            var projectNode = new ProjectNode(project);
+            if (solutionNode is not null) 
+                await _channelWriter.WriteAsync(new Relationship(solutionNode, projectNode,
+                RelationshipType.Have));
+            
             var projectDirectory = project.FilePath?.ContainingDirectory() ?? "";
 
             foreach (var projectReference in project.ProjectReferences)
             {
                 var referencedProjectName = _projectNameLookup[projectReference.ProjectId];
-                var message = $"({project.Name} : Project) -DEPENDS_ON-> ({referencedProjectName} : Project)";
-                await _channelWriter.WriteAsync(new Relationship(message));
+                var refProjectNode = new ProjectNode(referencedProjectName);
+                await _channelWriter.WriteAsync(new Relationship(projectNode, refProjectNode, RelationshipType.DependsOn));
             }
 
             foreach (var document in project.Documents)
             {
-                var filepath = Path.GetRelativePath(projectDirectory, document.FilePath ?? "");
+                if (document.Folders.FirstOrDefault() == "obj")
+                    continue;
+                
+                var filepath = Path.GetRelativePath( solutionDirectory ?? projectDirectory, document.FilePath ?? "");
+                var fileNode = new FileNode(filepath);
                 if (string.IsNullOrWhiteSpace(filepath)) continue;
-                var message = $"({project.Name} : Project) -CONTAINS-> ({filepath} : File)";
-                await _channelWriter.WriteAsync(new Relationship(message));
+                await _channelWriter.WriteAsync(new Relationship(projectNode, fileNode, RelationshipType.Contains));
             }
-
             var compilation = await project.GetCompilationAsync();
             if (compilation is null)
                 continue;
 
-            var typeWalker = new TypeWalker(_models, projectDirectory);
+            var typeWalker = new TypeWalker(_models, solutionDirectory ?? projectDirectory);
             foreach (var tree in compilation.SyntaxTrees)
             {
                 typeWalker.Visit(await tree.GetRootAsync());
