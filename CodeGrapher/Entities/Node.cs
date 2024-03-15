@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Formats.Tar;
+using System.Text;
 using CodeGrapher.Utils;
 using Microsoft.CodeAnalysis;
 
@@ -8,7 +9,7 @@ public abstract class Node
 {
     protected readonly string Label;
     protected readonly string FullName;
-    protected readonly string Name;
+    protected string Name;
 
     protected Node(string? label, string? fullName, string? name)
     {
@@ -91,33 +92,71 @@ public class ProjectNode : Node
     
 }
 
-public class ClassNode : Node
+public class SymbolNode : Node
 {
-    public ClassNode(INamedTypeSymbol? symbol) : base("Class", symbol?.ToString(), symbol?.Name)
+    private readonly string _attributes;
+    private readonly string _namespace;
+
+    public SymbolNode(string label, ISymbol? symbol) : base(label, symbol?.ToString(), symbol?.Name)
     {
         if (symbol is null)
             throw new ArgumentNullException(nameof(symbol));
-    }
-}
 
-public class InterfaceNode : Node
-{
-    public InterfaceNode(INamedTypeSymbol symbol) : base("Interface", symbol.ToString(), symbol.Name)
-    {
+        if (symbol is IMethodSymbol methodSymbol)
+        {
+            if (methodSymbol.MethodKind == MethodKind.Constructor)
+                Name = symbol.ContainingType.Name;
+        }
         
+        var attributes = symbol.GetAttributes();
+        _attributes = string.Join(",", attributes.Select(a => $"\"{a.AttributeClass.Name}\"")
+            .Select(a => a.Replace("Attribute", "")));
+        _namespace = symbol.ContainingNamespace.Name;
     }
+    
+    protected override StringBuilder FetchProperties(StringBuilder sb)
+    {
+        base.FetchProperties(sb);
+        sb.Append(", attributes: [");
+        sb.Append(_attributes);
+        sb.Append("], namespace: \"");
+        sb.Append(_namespace);
+        sb.Append("\"");
+        return sb;
+    }
+    
 }
 
-public class MethodNode : Node
+public class ClassNode : SymbolNode
 {
-    public MethodNode(IMethodSymbol? methodSymbol) : base(methodSymbol?.Label(), methodSymbol?.ToString(),
-        methodSymbol?.Name)
+    public ClassNode(INamedTypeSymbol? classSymbol) : base("Class", classSymbol)
+    {
+        if (classSymbol is null)
+            throw new ArgumentNullException(nameof(classSymbol));
+   }
+}
+
+public class InterfaceNode : SymbolNode
+{
+    public InterfaceNode(INamedTypeSymbol symbol) : base("Interface", symbol)
+    { }
+}
+
+public class MethodNode : SymbolNode
+{
+    private readonly string _arguments;
+    private readonly string _returnType;
+
+    protected override int Pk => $"{FullName}{_arguments}{_returnType}".GetHashCode();
+
+    public MethodNode(IMethodSymbol? methodSymbol) : base(methodSymbol?.Label(), methodSymbol)
     {
         if (methodSymbol is null)
             throw new ArgumentNullException(nameof(methodSymbol));
         
         _arguments = string.Join(",", methodSymbol.Parameters.Select(p => $"\"{p.Type} {p.Name}\""));
         _returnType = methodSymbol.ReturnType?.ToString() ?? throw new ArgumentNullException(nameof(methodSymbol), "methodSymbol.ReturnType returned null");
+
     }
 
     protected override StringBuilder FetchProperties(StringBuilder sb)
@@ -131,9 +170,6 @@ public class MethodNode : Node
         return sb;
     }
 
-    protected override int Pk => $"{FullName}{_arguments}{_returnType}".GetHashCode();
 
     
-    private readonly string _arguments;
-    private readonly string _returnType;
 }
