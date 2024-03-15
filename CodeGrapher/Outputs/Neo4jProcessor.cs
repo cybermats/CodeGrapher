@@ -3,7 +3,7 @@ using Neo4j.Driver;
 
 namespace CodeGrapher.Outputs;
 
-public class Neo4jProcessor : IProcessor, IDisposable, IAsyncDisposable
+public class Neo4jProcessor : IDisposable, IAsyncDisposable
 {
     private readonly IDriver _driver;
     private readonly IAsyncSession _session;

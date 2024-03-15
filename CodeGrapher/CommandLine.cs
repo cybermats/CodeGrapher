@@ -7,8 +7,7 @@ public class CommandLine : AsyncCommand<CommandLine.Settings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password,
-            settings.PrintToConsole);
+        var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password);
         await manager.RunAsync();
         return 0;
     }
@@ -29,9 +28,5 @@ public class CommandLine : AsyncCommand<CommandLine.Settings>
         [DefaultValue("12345678")]
         public string? Password { get; init; }
 
-
-        [CommandOption("--to-console")]
-        [DefaultValue(false)]
-        public bool PrintToConsole { get; init; }
     }
 }
