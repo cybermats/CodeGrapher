@@ -91,8 +91,11 @@ public class SymbolNode : Node
     private readonly string _attributes;
     private readonly string _namespace;
 
-    public SymbolNode(string label, ISymbol? symbol) : base(label, symbol?.ToString(), symbol?.Name)
+    public SymbolNode(string? label, ISymbol? symbol) : base(label, symbol?.ToString(), symbol?.Name)
     {
+        if (label is null)
+            throw new ArgumentNullException(nameof(label));
+        
         if (symbol is null)
             throw new ArgumentNullException(nameof(symbol));
 
@@ -101,7 +104,7 @@ public class SymbolNode : Node
                 Name = symbol.ContainingType.Name;
 
         var attributes = symbol.GetAttributes();
-        _attributes = string.Join(",", attributes.Select(a => $"\"{a.AttributeClass.Name}\"")
+        _attributes = string.Join(",", attributes.Select(a => $"\"{a?.AttributeClass?.Name ?? "Unknown"}\"")
             .Select(a => a.Replace("Attribute", "")));
         _namespace = symbol.ContainingNamespace.Name;
     }

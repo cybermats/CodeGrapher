@@ -32,7 +32,7 @@ public class GraphManager
         using var neo4JProcessor = new Neo4jProcessor(_uri, _user, _password);
         await neo4JProcessor.InitializeAsync();
 
-        IProcessor[] processors = null;
+        IProcessor[] processors;
         if (_enableConsole)
             processors = [new ConsoleProcessor(), neo4JProcessor];
         else
