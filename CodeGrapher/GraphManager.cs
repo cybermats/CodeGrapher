@@ -7,7 +7,6 @@ namespace CodeGrapher;
 
 public class GraphManager
 {
-    private readonly Channel<Relationship> _channel = Channel.CreateUnbounded<Relationship>();
     private readonly string _filepath;
     private readonly string _password;
     private readonly string _uri;
@@ -24,21 +23,18 @@ public class GraphManager
     public async Task RunAsync()
     {
         Console.WriteLine("Starting up...");
-        using var analyser = new Analyzer(_channel, _filepath);
+        using var analyser = new Analyzer(_filepath);
         var analysis = analyser.RunAsync();
 
         using var neo4JProcessor = new Neo4jProcessor(_uri, _user, _password);
-        await neo4JProcessor.InitializeAsync();
+        var neo4JInit = neo4JProcessor.InitializeAsync();
+
+        await Task.WhenAll(analysis, neo4JInit);
 
         try
         {
-            var mgr = new ProcessingManager(_channel, neo4JProcessor) { TotalItems = analyser.TotalItems};
-            var process = mgr.ProcessAsync();
-
-            await analysis;
-            mgr.TotalItems = analyser.TotalItems;
-            
-            await Task.WhenAll(process, _channel.Reader.Completion);
+            var mgr = new ProcessingManager(analyser.Relationships, neo4JProcessor);
+            await mgr.ProcessAsync();
         }
         catch (Exception e)
         {

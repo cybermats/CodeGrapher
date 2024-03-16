@@ -6,8 +6,8 @@ namespace CodeGrapher.Entities;
 
 public abstract class Node(string? label, string? fullName, string? name)
 {
-    protected readonly string FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
-    protected readonly string Label = label ?? throw new ArgumentNullException(nameof(label));
+    public string FullName { get; } = fullName ?? throw new ArgumentNullException(nameof(fullName));
+    public string Label { get; } = label ?? throw new ArgumentNullException(nameof(label));
     protected string Name = name ?? throw new ArgumentNullException(nameof(name));
 
     protected virtual StringBuilder FetchProperties(StringBuilder sb)
@@ -20,12 +20,17 @@ public abstract class Node(string? label, string? fullName, string? name)
         return sb;
     }
 
-    public string ToString(string variable)
+    public string ToFullString(string variable)
     {
         if (variable == null) throw new ArgumentNullException(nameof(variable));
         return $"({variable}:{Label} {{ {FetchProperties(new StringBuilder())} }})";
     }
 
+    public string ToShortString(string variable)
+    {
+        if (variable == null) throw new ArgumentNullException(nameof(variable));
+        return $"({variable}:{Label} {{ fullname: \"{FullName}\" }})";
+    }
     public override string ToString()
     {
         return $"{nameof(Label)}: {Label}, {nameof(FullName)}: {FullName}";
