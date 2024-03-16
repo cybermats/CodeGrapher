@@ -8,25 +8,30 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
 {
     private readonly IDriver _driver;
     private readonly IAsyncSession _session;
-    private readonly ProgressBar _progressBar = new ProgressBar(4, "Saving to database...");
+    private readonly IProgressBar _mainProgressBar;
+    private readonly IProgressBar _progressBar;
 
 
-    public Neo4jProcessor(string uri, string user, string password)
+    public Neo4jProcessor(string uri, string user, string password, IProgressBar mainProgressBar)
     {
         _driver = GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
         _session = _driver.AsyncSession();
+        _mainProgressBar = mainProgressBar;
+        _progressBar  = _mainProgressBar.Spawn(4, "Saving to database...");
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
         await _session.DisposeAsync();
         await _driver.DisposeAsync();
+        _progressBar.Dispose();
     }
 
     void IDisposable.Dispose()
     {
         _session.Dispose();
         _driver.Dispose();
+        _progressBar.Dispose();
     }
 
     public async Task WriteNodesAsync(IEnumerable<Triple> triples)
@@ -52,7 +57,7 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
             nodes = nodes.Skip(batchSize).ToList();
             pbar.Tick(processed += creates.Count());
         }
-        _progressBar.Tick();
+        _progressBar.Tick("Saving nodes...");
     }
 
     public async Task WriteRelationships(IEnumerable<Triple> relationships)
@@ -64,12 +69,7 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
             await _session.RunAsync(relationship.ToMergeString());
             pbar.Tick();
         }
-        _progressBar.Tick();
-    }
-
-    public async Task WriteAsync(Triple triple)
-    {
-        await _session.RunAsync(triple.ToString());
+        _progressBar.Tick("Saving relationships...");
     }
 
     public async Task InitializeAsync()

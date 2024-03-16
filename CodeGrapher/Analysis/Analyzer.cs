@@ -14,17 +14,21 @@ public sealed class Analyzer : IDisposable
     private readonly Dictionary<SyntaxTree, SemanticModel> _models = new();
     private readonly Dictionary<ProjectId, string> _projectNameLookup = new();
     private readonly MSBuildWorkspace _workspace = MSBuildWorkspace.Create();
+    private readonly IProgressBar _mainProgressBar;
 
     private int _numSyntaxTrees;
     private IEnumerable<Project> _projects = Array.Empty<Project>();
     private Solution? _solution;
+    
+    
 
     public List<Triple> Relationships { get; init; } = new();
 
-    public Analyzer(string? filename)
+    public Analyzer(string? filename, IProgressBar mainProgressBar)
     {
         MSBuildLocator.RegisterDefaults();
         _filename = filename;
+        _mainProgressBar = mainProgressBar;
     }
 
 
@@ -86,8 +90,7 @@ public sealed class Analyzer : IDisposable
 
         var solutionDirectory = _solution?.FilePath?.ContainingDirectory() ?? null;
 
-        var options = new ProgressBarOptions();
-        using var progressBar = new ProgressBar(_numSyntaxTrees, "Starting...", options);
+        using var progressBar = _mainProgressBar.Spawn(_numSyntaxTrees, "Analysing...");
 
         foreach (var project in _projects)
         {
@@ -134,11 +137,12 @@ public sealed class Analyzer : IDisposable
 
     public async Task RunAsync()
     {
-        Console.WriteLine("Opening workspace...");
+        using var progressBar = _mainProgressBar.Spawn(3, "Opening workspace...");
         await OpenAsync();
-        Console.WriteLine("Preparing workspace...");
+        progressBar.Tick("Preparing workspace...");
         await PrepareAsync();
-        Console.WriteLine("Analyzing...");
+        progressBar.Tick("Analyzing...");
         await Analyze();
+        progressBar.Tick("");
     }
 }
