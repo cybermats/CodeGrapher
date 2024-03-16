@@ -29,8 +29,15 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
         _driver.Dispose();
     }
 
-    public async Task WriteNodesAsync(IEnumerable<Node> nodes)
+    public async Task WriteNodesAsync(IEnumerable<Triple> triples)
     {
+        var nodes = triples
+            .SelectMany<Triple, Node>(relationship => [relationship.From, relationship.To])
+            .DistinctBy(node => node.FullName)
+            .ToDictionary(node => $"{node.Label}:{node.FullName}")
+            .Values
+            .ToList();
+       
         using var pbar = _progressBar.Spawn(nodes.Count(), "Saving nodes...");
         const int batchSize = 50;
         var processed = 0;
@@ -42,15 +49,16 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
             var full = string.Join(", ", creates);
             var query = $"CREATE {full}";
             await _session.RunAsync(query);
-            nodes = nodes.Skip(batchSize);
+            nodes = nodes.Skip(batchSize).ToList();
             pbar.Tick(processed += creates.Count());
         }
         _progressBar.Tick();
     }
 
-    public async Task WriteRelationships(IEnumerable<Relationship> relationships)
+    public async Task WriteRelationships(IEnumerable<Triple> relationships)
     {
         using var pbar = _progressBar.Spawn(relationships.Count(), "Saving relationships...");
+        
         foreach (var relationship in relationships)
         {
             await _session.RunAsync(relationship.ToMergeString());
@@ -59,9 +67,9 @@ public class Neo4jProcessor : IDisposable, IAsyncDisposable
         _progressBar.Tick();
     }
 
-    public async Task WriteAsync(Relationship relationship)
+    public async Task WriteAsync(Triple triple)
     {
-        await _session.RunAsync(relationship.ToString());
+        await _session.RunAsync(triple.ToString());
     }
 
     public async Task InitializeAsync()

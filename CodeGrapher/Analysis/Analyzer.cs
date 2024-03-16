@@ -19,7 +19,7 @@ public sealed class Analyzer : IDisposable
     private IEnumerable<Project> _projects = Array.Empty<Project>();
     private Solution? _solution;
 
-    public List<Relationship> Relationships { get; init; } = new();
+    public List<Triple> Relationships { get; init; } = new();
 
     public Analyzer(string? filename)
     {
@@ -93,8 +93,8 @@ public sealed class Analyzer : IDisposable
         {
             var projectNode = new ProjectNode(project);
             if (solutionNode is not null)
-                Relationships.Add(new Relationship(solutionNode, projectNode,
-                    RelationshipType.Have));
+                Relationships.Add(new Triple(solutionNode, projectNode,
+                    Relationship.Have()));
 
             var projectDirectory = project.FilePath?.ContainingDirectory() ?? "";
 
@@ -102,8 +102,8 @@ public sealed class Analyzer : IDisposable
             {
                 var referencedProjectName = _projectNameLookup[projectReference.ProjectId];
                 var refProjectNode = new ProjectNode(referencedProjectName);
-                Relationships.Add(new Relationship(projectNode, refProjectNode,
-                    RelationshipType.DependsOn));
+                Relationships.Add(new Triple(projectNode, refProjectNode,
+                    Relationship.DependsOn()));
             }
 
             foreach (var document in project.Documents)
@@ -114,7 +114,7 @@ public sealed class Analyzer : IDisposable
                 var filepath = Path.GetRelativePath(solutionDirectory ?? projectDirectory, document.FilePath ?? "");
                 var fileNode = new FileNode(filepath);
                 if (string.IsNullOrWhiteSpace(filepath)) continue;
-                Relationships.Add(new Relationship(projectNode, fileNode, RelationshipType.Contains));
+                Relationships.Add(new Triple(projectNode, fileNode, Relationship.Contains()));
             }
 
             var compilation = await project.GetCompilationAsync();
