@@ -7,8 +7,10 @@ public class CommandLine : AsyncCommand<CommandLine.Settings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
     {
-        var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password);
+        Console.WriteLine("Analyzing...");
+        using var manager = new GraphManager(settings.FilePath, settings.Host, settings.Username, settings.Password, settings.Database);
         await manager.RunAsync();
+        Console.WriteLine("Done");
         return 0;
     }
 
@@ -27,6 +29,10 @@ public class CommandLine : AsyncCommand<CommandLine.Settings>
         [CommandOption("-p|--password")]
         [DefaultValue("12345678")]
         public string? Password { get; init; }
+        
+        [CommandOption("-d|--database")]
+        [DefaultValue("codegrapher")]
+        public string? Database { get; init; }
 
     }
 }

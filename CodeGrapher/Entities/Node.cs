@@ -6,6 +6,24 @@ namespace CodeGrapher.Entities;
 
 public abstract class Node(string? label, string? fullName, string? name)
 {
+    protected bool Equals(Node other)
+    {
+        return FullName == other.FullName && Label == other.Label;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((Node)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(FullName, Label);
+    }
+
     public string FullName { get; } = fullName ?? throw new ArgumentNullException(nameof(fullName));
     public string Label { get; } = label ?? throw new ArgumentNullException(nameof(label));
     protected string Name = name ?? throw new ArgumentNullException(nameof(name));

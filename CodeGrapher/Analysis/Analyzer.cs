@@ -91,7 +91,6 @@ public sealed class Analyzer : IDisposable
         var solutionDirectory = _solution?.FilePath?.ContainingDirectory() ?? null;
 
         using var progressBar = _mainProgressBar.Spawn(_numSyntaxTrees, "Analysing...");
-
         foreach (var project in _projects)
         {
             var projectNode = new ProjectNode(project);
@@ -137,12 +136,11 @@ public sealed class Analyzer : IDisposable
 
     public async Task RunAsync()
     {
-        using var progressBar = _mainProgressBar.Spawn(3, "Opening workspace...");
+        _mainProgressBar.Tick("Opening workspace...");
         await OpenAsync();
-        progressBar.Tick("Preparing workspace...");
+        _mainProgressBar.Tick("Preparing workspace...");
         await PrepareAsync();
-        progressBar.Tick("Analyzing...");
+        _mainProgressBar.Tick("Analyzing...");
         await Analyze();
-        progressBar.Tick("");
     }
 }

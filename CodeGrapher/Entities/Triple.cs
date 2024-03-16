@@ -15,6 +15,6 @@ public class Triple(Node from, Node to, Relationship relationship)
     public string ToShortString(string from, string to, string rel)
     {
         return
-            $"({from}) {Relationship.ToCypher(rel)} ]({to})";
+            $"({from}) {Relationship.ToCypher(rel)} ({to})";
     }
 }
